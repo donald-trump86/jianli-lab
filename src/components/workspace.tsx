@@ -78,7 +78,7 @@ export function Workspace() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : '快照格式不正确，请重新选择。'); setNotice(''); }
   }
 
-  return <div className="app-shell" data-ui>
+  return <div className="app-shell">
     <header className="topbar">
       <a href="/" className="wordmark" aria-label="见理实验台"><svg width="32" height="32" viewBox="0 0 29 29" fill="none" aria-hidden="true"><path d="M6 5h17v13H6zM10 22l-4 3M17 18v7h6" stroke="currentColor" strokeWidth="2" /><circle cx="14.5" cy="11.5" r="2.5" fill="currentColor" /></svg><span>见理<small>Jianli Lab</small></span></a>
       <nav ref={tabBarRef} className="experiment-tabs" aria-label="选择实验"><button type="button" aria-pressed={current.kind === 'knn'} onClick={() => select('knn')}><Icon name="grid" />距离与分类</button><button type="button" aria-pressed={current.kind === 'bridge'} onClick={() => select('bridge')}><Icon name="circuit" />应变与电桥</button><span ref={indicatorRef} className="tab-indicator" aria-hidden="true" /></nav>
