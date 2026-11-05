@@ -76,6 +76,7 @@ pnpm exec vitest run tests/experiments.test.ts
 - [tests](tests)：数值、边界、快照和模拟模型测试。
 - [首版设计](docs/design/mvp.md)、[界面决定](docs/design/interface.md)：范围、数学约定与交互选择。
 - [开发记录](docs/development-log.md)：实际发现、修复和验证范围，不能替代比赛要求的原始 AI 会话记录。
+- [视觉重做核对](docs/design/redesign-verification.md)：当前布局与首版的差异、已运行的检查及尚待浏览器核对的项目。
 
 ## 运行边界
 

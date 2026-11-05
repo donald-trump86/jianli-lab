@@ -65,8 +65,8 @@ export function KnnExperiment({ config, onChange }: Props) {
   return <>
     <div className="quick-controls"><RangeField label="邻居数量 k" min={1} max={Math.min(15, config.points.length)} value={config.k} onChange={k => onChange({ ...config, k })} /><div className="select-field"><label htmlFor="quick-distance-metric">距离度量</label><select id="quick-distance-metric" value={config.metric} onChange={event => onChange({ ...config, metric: event.target.value as KnnConfig['metric'] })}>{Object.entries(metricNames).map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></div></div>
     <section className="visual-card" aria-labelledby="knn-visual-title">
-      <div className="visual-heading"><h2 id="knn-visual-title">距离塑造边界</h2><span className="quiet-label">{config.points.length} 个样本 · k = {config.k}</span></div>
-      <div className="plot-wrap">
+      <div className="visual-heading"><h2 id="knn-visual-title">谁是最近的邻居？</h2><div className="canvas-legend"><span><i className="legend-dot class-a" />A 类</span><span><i className="legend-dot class-b square" />B 类</span></div></div>
+      <div className="canvas-body"><div className="plot-wrap">
         <svg ref={plotRef} viewBox="0 0 544 510" className="knn-plot" role="group" aria-label="KNN 样本与决策区域，点可拖动或用方向键移动" onPointerMove={pointerMove} onPointerUp={() => { dragging.current = null; }} onPointerCancel={() => { dragging.current = null; }} onLostPointerCapture={() => { dragging.current = null; }}>
           <defs><clipPath id={clipId}><rect x={LEFT} y={TOP} width={SIZE} height={SIZE} /></clipPath></defs>
           <rect x={LEFT} y={TOP} width={SIZE} height={SIZE} fill="var(--surface)" />
@@ -94,10 +94,14 @@ export function KnnExperiment({ config, onChange }: Props) {
           {[-5, 0, 5].map(value => <g key={value} fill="var(--muted)" fontSize="12"><text x={screen({ x: value, y: 0 }).x} y="486" textAnchor="middle">{value}</text><text x="38" y={screen({ x: 0, y: value }).y + 4} textAnchor="end">{value}</text></g>)}
           <text x="492" y="505" textAnchor="end" fill="var(--muted)" fontSize="12">特征 x</text><text x="52" y="16" fill="var(--muted)" fontSize="12">特征 y</text>
         </svg>
+        <div className="canvas-instruction"><span>拖动观察点，看看分类在哪里改变。</span><span>方向键微调</span></div>
       </div>
-      <div className="canvas-legend"><span><i className="legend-dot class-a" />A 类</span><span><i className="legend-dot class-b square" />B 类</span><span className="legend-hint">拖动点，或用方向键微调</span></div>
-      <div className="classification-result" aria-live="polite"><div className={`class-result-badge class-${result.label.toLowerCase()}`}>{result.label}</div><div><strong>观察点归为 {result.label} 类</strong><p>A 类 {result.votes.A} 票 · B 类 {result.votes.B} 票</p></div><div className="vote-share"><strong>{Math.round(result.voteShare * 100)}<small>%</small></strong><span>胜出类别票数占比</span></div></div>
-      <p className="figure-caption">浅色区域是 28 × 28 网格的分类示意；当前观察点按精确距离计算。票数占比不代表预测概率。</p>
+      <aside className="canvas-insight" aria-label="分类结果与邻居证据">
+        <div className="classification-result" aria-live="polite"><span className="result-label">观察点的分类</span><div className="classification-answer"><strong className={`class-answer class-${result.label.toLowerCase()}`}>{result.label}<small>类</small></strong><span>{config.points.length} 个样本<br />{config.k} 位邻居投票</span></div><div className="vote-labels"><span>A 类 <strong>{result.votes.A}</strong> 票</span><span>B 类 <strong>{result.votes.B}</strong> 票</span></div><div className="vote-track" aria-hidden="true"><span className="vote-a" style={{ flex: result.votes.A }} /><span className="vote-b" style={{ flex: result.votes.B }} /></div><p>胜出类别占 {Math.round(result.voteShare * 100)}% 票数</p></div>
+        <div className="neighbor-list"><h3>参与投票的邻居</h3><div className="neighbor-scroll"><table><thead><tr><th>样本</th><th>类别</th><th>距离</th></tr></thead><tbody>{result.neighbors.map(point => <tr key={point.id}><td title={point.id}>{point.id}</td><td><span className={`class-label class-${point.label.toLowerCase()}`}>{point.label}</span></td><td>{point.distance.toFixed(3)}</td></tr>)}</tbody></table></div></div>
+        <p className="coordinate-readout">观察点坐标<span>({config.query.x.toFixed(2)}, {config.query.y.toFixed(2)})</span></p>
+      </aside></div>
+      <p className="figure-caption">浅色区域为分类示意，观察点按精确距离计算。票数占比不代表预测概率。</p>
     </section>
     <aside className="parameters-card" aria-labelledby="knn-parameters"><div className="section-heading"><h2 id="knn-parameters">实验参数</h2><span>变化即刻生效</span></div><div className="parameter-grid">
       <RangeField className="quick-field" label="邻居数量 k" min={1} max={Math.min(15, config.points.length)} value={config.k} onChange={k => onChange({ ...config, k })} />
@@ -106,7 +110,6 @@ export function KnnExperiment({ config, onChange }: Props) {
       <RangeField label="y 轴计算尺度" min={0.1} max={10} step={0.1} value={config.scaleY} unit="×" onChange={scaleY => onChange({ ...config, scaleY })} />
     </div>
     <details className="advanced-controls"><summary>精确移动观察点</summary><RangeField label="观察点 x 坐标" min={-5} max={5} step={0.01} value={config.query.x} onChange={x => onChange({ ...config, query: { ...config.query, x } })} /><RangeField label="观察点 y 坐标" min={-5} max={5} step={0.01} value={config.query.y} onChange={y => onChange({ ...config, query: { ...config.query, y } })} /></details>
-    <div className="neighbor-list"><h3>参与投票的邻居</h3><table><thead><tr><th>样本</th><th>类别</th><th>距离</th></tr></thead><tbody>{result.neighbors.map(point => <tr key={point.id}><td>{point.id}</td><td><span className={`class-label class-${point.label.toLowerCase()}`}>{point.label}</span></td><td>{point.distance.toFixed(3)}</td></tr>)}</tbody></table></div>
     <details className="model-note"><summary>这个实验如何计算？</summary><p className="formula">{formulas[config.metric]}</p><p>尺度只参与距离计算，不改变图上的原始坐标。等距离按样本 ID 排序；同票按最近邻居的距离决定，再同距时 A 类优先。</p></details>
     </aside>
   </>;

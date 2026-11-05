@@ -17,6 +17,7 @@ export function AiPanel({ current, onApply }: Props) {
   const [error, setError] = useState('');
   const requestRef = useRef<AbortController | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
   const currentRef = useRef(current);
   currentRef.current = current;
   const changed = preview !== null && preview.baseline !== JSON.stringify(current);
@@ -74,19 +75,24 @@ export function AiPanel({ current, onApply }: Props) {
     }
   }
 
+  function closePreview() {
+    setPreview(null);
+    promptRef.current?.focus({ preventScroll: true });
+  }
+
   function apply() {
     if (!preview || changed) return;
     try {
       onApply(applyPlan(preview.plan, current));
       setMessage(`已应用“${preview.plan.title}”，可以继续调整参数。`);
-      setPreview(null); setError('');
+      closePreview(); setError('');
     } catch { setError('这组参数与当前实验不兼容，请重新生成。'); }
   }
 
   return <section className="assistant-panel" aria-labelledby="assistant-title">
-    <div className="assistant-intro"><div className="section-heading"><h2 id="assistant-title">从一个问题开始</h2><span>{configured === null ? '检查 AI 配置…' : configured ? 'AI 已配置' : '本地体验模式'}</span></div><p>用一句话提出实验要求，先看配置，再亲手验证。</p><div className="example-actions"><button type="button" className="text-button" onClick={() => localExample('knn')}>试试：改变距离尺度<Icon name="arrow" /></button><button type="button" className="text-button" onClick={() => localExample('bridge')}>试试：观察全桥输出<Icon name="arrow" /></button></div></div>
-    <div className="assistant-work"><form onSubmit={generate}><label htmlFor="experiment-prompt">你想观察什么？</label><textarea id="experiment-prompt" value={prompt} maxLength={1000} rows={3} onChange={event => setPrompt(event.target.value)} placeholder={current.kind === 'knn' ? '例如：把 x 轴尺度调到 3，看看最近邻如何变化。' : '例如：保持 500 με 应变，比较半桥与全桥的输出。'} /><div className="prompt-actions"><span>{busy ? '正在请求并校验完整配置…' : configured ? '发送当前实验配置与问题' : 'AI 需配置服务端密钥，可先体验上方示例'}</span>{busy ? <button type="button" className="button secondary" onClick={() => { requestRef.current?.abort(); setBusy(false); }}>取消请求</button> : <button type="submit" className="button primary" disabled={!configured || !prompt.trim()}><Icon name="spark" />生成实验</button>}</div></form>
-    {preview && <div ref={previewRef} className="plan-preview"><div className="preview-heading"><span>{preview.source === 'local' ? '本地预设 · 非 AI 生成' : 'AI 配置 · 已通过结构校验'}</span><button type="button" className="icon-button" aria-label="关闭实验预览" onClick={() => setPreview(null)}><Icon name="close" /></button></div><h3>{preview.plan.title}</h3><p className="preview-question">{preview.plan.question}</p><p>{preview.plan.explanation}</p><div className="preview-parameters">{preview.plan.experiment === 'knn' ? `k = ${preview.plan.parameters.k} · ${preview.plan.parameters.metric} · x × ${preview.plan.parameters.scaleX} · y × ${preview.plan.parameters.scaleY}` : `${preview.plan.parameters.strainMicro} με · GF ${preview.plan.parameters.gaugeFactor} · ${preview.plan.parameters.excitation} V · ${preview.plan.parameters.mode}`}</div>{changed && <p className="inline-warning">当前实验已有变化，请重新选择示例或生成配置。</p>}<button type="button" className="button primary" onClick={apply} disabled={changed}>应用这组参数<Icon name="arrow" /></button></div>}
+    <div className="assistant-intro"><div className="section-heading"><h2 id="assistant-title"><Icon name="spark" />实验助手</h2><span>{configured === null ? '检查配置…' : configured ? 'AI 已配置' : '本地体验'}</span></div><p>提出一个想法，再亲手验证。</p></div>
+    <div className="assistant-work"><form onSubmit={generate}><label htmlFor="experiment-prompt">你想观察什么？</label><textarea ref={promptRef} id="experiment-prompt" value={prompt} maxLength={1000} rows={2} onChange={event => setPrompt(event.target.value)} placeholder={current.kind === 'knn' ? '把 x 轴尺度调到 3，分类会变吗？' : '同样的应变，全桥输出会更大吗？'} /><div className="prompt-actions"><span>{busy ? '正在校验实验配置…' : configured ? '发送当前参数与问题' : '未配置 AI，可先试用下方示例'}</span>{busy ? <button type="button" className="button secondary" onClick={() => { requestRef.current?.abort(); setBusy(false); }}>取消请求</button> : <button type="submit" className="button secondary generate-button" disabled={!configured || !prompt.trim()}><Icon name="arrow" />生成实验</button>}</div></form><div className="example-actions"><button type="button" className="text-button" onClick={() => localExample('knn')}>试试：改变距离尺度<Icon name="arrow" /></button><button type="button" className="text-button" onClick={() => localExample('bridge')}>试试：观察全桥输出<Icon name="arrow" /></button></div>
+    {preview && <div ref={previewRef} className="plan-preview"><div className="preview-heading"><span>{preview.source === 'local' ? '本地预设 · 非 AI 生成' : 'AI 配置 · 已通过结构校验'}</span><button type="button" className="icon-button" aria-label="关闭实验预览" onClick={closePreview}><Icon name="close" /></button></div><h3>{preview.plan.title}</h3><p className="preview-question">{preview.plan.question}</p><p>{preview.plan.explanation}</p><div className="preview-parameters">{preview.plan.experiment === 'knn' ? `k = ${preview.plan.parameters.k} · ${preview.plan.parameters.metric} · x × ${preview.plan.parameters.scaleX} · y × ${preview.plan.parameters.scaleY}` : `${preview.plan.parameters.strainMicro} με · GF ${preview.plan.parameters.gaugeFactor} · ${preview.plan.parameters.excitation} V · ${preview.plan.parameters.mode}`}</div>{changed && <p className="inline-warning">当前实验已有变化，请重新选择示例或生成配置。</p>}<button type="button" className="button primary" onClick={apply} disabled={changed}>应用这组参数<Icon name="arrow" /></button></div>}
     {error && <p className="inline-error" role="alert">{error}</p>}{message && <p className="inline-success" role="status">{message}</p>}
     </div>
   </section>;
