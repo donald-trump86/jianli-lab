@@ -98,7 +98,7 @@ small { font-size: var(--fs-small); }
 .classification-result { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--raised); border-radius: var(--radius-control); }
 .class-result-badge { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; border-radius: var(--radius-control); }
 .class-result-badge.class-a { color: var(--chart-1); background: var(--class-a-soft); }
-.class-result-badge.class-b { color: var(--chart-2); background: var(--class-b-soft); }
+.class-result-badge.class-b { color: #2865ac; background: var(--class-b-soft); }
 .classification-result p { color: var(--muted); font-size: 12px; margin-top: 3px; }
 .classification-result strong { font-weight: 500; }
 .vote-share { margin-left: auto; text-align: right; flex-shrink: 0; }
@@ -231,7 +231,7 @@ td:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   .new-samples { font-size: 12px; gap: 4px; }
   .new-samples > svg { width: 14px; }
   .quick-controls { gap: 16px; }
-  .quick-controls input[type='range'], input[type='range'] { height: 28px; }
+  input[type='range'] { height: 44px; }
   .visual-card, .parameters-card { padding: 14px; }
   .visual-heading { flex-wrap: wrap; gap: 5px; }
   .visual-heading h2 { font-size: 15px; }
@@ -282,6 +282,8 @@ td:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 @media (pointer: coarse) {
   .knn-plot .point-hit { r: 40px; }
+  .button, .icon-button, .text-button, .experiment-tabs > button, .select-field select, summary, input[type='range'] { min-height: 44px; }
+  .icon-button, .workspace-message .icon-button { width: 44px; height: 44px; }
 }
 @media (prefers-contrast: more) {
   :root { --border: #80858a; --rule: #959a9e; --control: #555b60; --muted: #373b40; }
